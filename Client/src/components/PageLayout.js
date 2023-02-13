@@ -16,6 +16,8 @@ import { RouteFilters } from './Filters';
 import MessageContext from '../messageCtx';
 import API from '../API';
 
+import { subscribeToFilmUpdates, unsubscribeFromFilmUpdates } from '../App';
+
 import OnlineList from './OnlineList';
 import MiniOnlineList from './MiniOnlineList';
 
@@ -210,11 +212,24 @@ function PublicLayout() {
     .catch(e => handleErrors(e));
   }
 
+  const subscribeFilm = (film) => {
+    console.log("Sono dentro Layout" + JSON.stringify(film));
+    subscribeToFilmUpdates(JSON.stringify(film))
+      .then(() => { setDirty(true); })
+      .catch(e => handleErrors(e)); 
+  }
+
+  const unsubscribeFilm = (film) => {
+    unsubscribeFromFilmUpdates(film)
+      .then(() => { setDirty(true); })
+      .catch(e => handleErrors(e)); 
+  }
+
   return (
     <>
       <h1 className="pb-3">Public Films</h1>
       <PublicFilmTable films={films}
-        deleteFilm={deleteFilm} updateFilm={updateFilm} refreshFilms={refreshFilms} />
+        deleteFilm={deleteFilm} updateFilm={updateFilm} refreshFilms={refreshFilms} subscribe={subscribeFilm} unsubscribe={unsubscribeFilm} />
       <Link to="/public/add" state={{ nextpage: location.pathname }}>
         <Button variant="primary" size="lg" className="fixed-right-bottom" > &#43; </Button>
       </Link>
@@ -367,17 +382,32 @@ function ReviewLayout() {
 
   const [reviews, setReviews] = useState([]);
   const [dirty, setDirty] = useState(true);
-  const [film, setFilm] = useState()
+  const [film, setFilm] = useState();
+
   const { filmId } = useParams();
-
+  const { handleErrors } = useContext(MessageContext);
   const location = useLocation();
-
-  const {handleErrors} = useContext(MessageContext);
-
-
   const { filterLabel } = useParams();
   const filterId = filterLabel || (location.pathname === "/" && 'filter-all');
 
+  var mqtt = require('mqtt')
+  var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8)
+      var options = {
+      keepalive: 30,
+      clientId: clientId,
+      clean: true,
+      reconnectPeriod: 1000,
+      connectTimeout: 30 * 1000,
+      will: {
+      topic: 'WillMsg',
+      payload: 'Connection Closed abnormally..!',
+      qos: 0,   
+      retain: false
+      },
+      rejectUnauthorized: false
+      }
+  var host = 'ws://127.0.0.1:8080'
+  var client = mqtt.connect(host, options);
 
   // Without this we do not pass the if(dirty) test in the [filterId, dirty] useEffect
   useEffect(() => {
@@ -399,6 +429,15 @@ function ReviewLayout() {
       .catch(e => { handleErrors(e);  } ); 
     }
   }, [dirty]);
+
+  useEffect(() => {
+    client.subscribe(`review/${filmId}`, { qos: 2 });
+    client.on('message', (topic, message) => {
+    if (topic === `review/${filmId}`) {
+    setFilm(filmId);
+    setDirty(true);
+    }
+    });;}, []);
 
   const deleteReview = (review) => {
     API.deleteReview(review)

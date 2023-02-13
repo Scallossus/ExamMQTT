@@ -64,22 +64,5 @@ module.exports.getMessage = function getMessage(filmId) {
 module.exports.deleteMessage = function deleteMessage(filmId) {
     filmMessageMap.delete(filmId);
 };
-
-module.exports.subscribeToFilm = function subscribeToFilm(filmId) {
-  mqtt_connection.subscribe(String(filmId), { qos: 0 }, function (err) {
-    if (!err) {
-      console.log('Subscribed to Film Id: ' + filmId);
-    }
-  });
-};
-
-//Da vedere che ID mettere
-
-module.exports.subscribeToReview = function subscribeToReview(filmId) {
-  mqtt_connection.subscribe(String(reviewId), { qos: 0 }, function (err) {
-    if (!err) {
-      console.log('Subscribed to Review Id: ' + reviewId);
-    }
-  });
-};
+//
 

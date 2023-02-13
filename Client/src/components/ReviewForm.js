@@ -15,6 +15,7 @@ const ReviewForm = (props) => {
   const [rating, setRating] = useState(props.review ? props.review.rating : 0);
   const [review, setReview] = useState(props.review ? props.review.review : 0);
 
+
   // useNavigate hook is necessary to change page
   const navigate = useNavigate();
   // useLocation hook is used to remember with filter was selected when we reached this form
@@ -28,8 +29,8 @@ const ReviewForm = (props) => {
   //const owner = props.film ? props.film.owner : localStorage.getItem("userId");
     const newReview = new Review( {filmId, reviewerId, completed, reviewDate, rating, reviewDate, review } );
     props.editReview(newReview);
-    navigate('/');
 }
+
 
 
   return (
@@ -67,8 +68,9 @@ const ReviewForm = (props) => {
         <Form.Label>Review Text</Form.Label>
         <Form.Control as="textarea" rows={3} onChange={event => setReview(event.target.value)}/>
       </Form.Group>
-
+      <Link to={nextpage}> 
       <Button className="mb-3" variant="primary" type="submit">Save</Button>
+      </Link>
       &nbsp;
       <Link to={nextpage}> 
         <Button className="mb-3" variant="danger" >Cancel</Button>

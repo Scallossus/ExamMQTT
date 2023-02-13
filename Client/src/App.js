@@ -198,11 +198,11 @@ function Main() {
       
     }
 
+
     client.on('close', function () {
       console.log(clientId + ' disconnected');
     })
 },[]);
-
   
   /*
    * This function handles the receival of WebSocket messages.
@@ -250,6 +250,8 @@ function Main() {
     }
   };
 
+
+
   /**
    * This function handles the logout process.
    */ 
@@ -295,6 +297,42 @@ function Main() {
       </Routes>
     </>
   );
+}
+
+export function subscribeToFilmUpdates(filmId) {
+  return new Promise((resolve, reject) => {
+    client.subscribe(filmId, (error) => {
+      if(error) {
+        console.error(error);
+        reject(error);
+      } else {
+        console.log("Subscribed to film updates for: " + filmId);
+        client.on('message', (topic, message) => {
+          console.log(`Received message: ${message.toString()} on topic: ${topic}`)
+        })
+        resolve();
+      }
+    });
+  });
+}
+
+
+
+export function unsubscribeFromFilmUpdates(filmId) {
+  return new Promise((resolve, reject) => {
+    client.unsubscribe(filmId, (error) => {
+      if(error) {
+        console.error(error);
+        reject(error);
+      } else {
+        console.log("UnSubscribed to film updates for: " + filmId);
+        client.on('message', (topic, message) => {
+          console.log(`Received message: ${message.toString()} on topic: ${topic}`)
+        })
+        resolve();
+      }
+    });
+  });
 }
 
 export default App;

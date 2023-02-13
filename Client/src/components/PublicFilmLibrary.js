@@ -1,15 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, Button } from 'react-bootstrap/'
 import { Link, useLocation } from 'react-router-dom';
 import Pagination from "react-js-pagination";
 
 function PublicFilmTable(props) {
-
+ 
   const handlePageChange = pageNumber => {
     props.refreshFilms(pageNumber);
-  }
+  }  
 
-  
 
   return (
     <>
@@ -18,7 +17,7 @@ function PublicFilmTable(props) {
         {
           props.films.map((film) =>
             <PublicFilmRow filmData={film} key={film.id} id={film.id}
-              deleteFilm={props.deleteFilm} updateFilm={props.updateFilm} />
+              deleteFilm={props.deleteFilm} updateFilm={props.updateFilm} subscribe={props.subscribe} unsubscribe={props.unsubscribe} />
           )
         }
         
@@ -46,6 +45,17 @@ function PublicFilmRow(props) {
    * So, we may be able to come back to the last selected filter view if cancel is pressed.
    */
   const location = useLocation();
+  const [subscribed, setSubscribed] = useState(false);
+  
+  const handleClick = () => {
+    if (props.filmData.subscribed) {
+      props.unsubscribe(props.filmData.id);
+      setSubscribed(false);
+    } else {
+      props.subscribe(props.filmData.id);
+      setSubscribed(true);
+    }
+  } 
 
   return (
     <tr>
@@ -82,6 +92,9 @@ function PublicFilmRow(props) {
         </Link>
       }
       </td>
+      <td>  <Button variant={subscribed ? 'danger' : 'primary'} onClick={handleClick}>
+    {subscribed ? 'Unsubscribe' : 'Subscribe'}
+  </Button></td>
     </tr>
   );
 }
