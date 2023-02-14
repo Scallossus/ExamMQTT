@@ -48,7 +48,7 @@ function PublicFilmRow(props) {
   const [subscribed, setSubscribed] = useState(false);
   
   const handleClick = () => {
-    if (props.filmData.subscribed) {
+    if (subscribed) {
       props.unsubscribe(props.filmData.id);
       setSubscribed(false);
     } else {

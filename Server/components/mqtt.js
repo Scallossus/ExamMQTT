@@ -64,5 +64,8 @@ module.exports.getMessage = function getMessage(filmId) {
 module.exports.deleteMessage = function deleteMessage(filmId) {
     filmMessageMap.delete(filmId);
 };
-//
+
+module.exports.publishReviewUpdate = function publishReviewUpdate(topic, message) {
+  mqtt_connection.publish(String(topic), JSON.stringify(message), { qos: 1, retain: true })
+};
 

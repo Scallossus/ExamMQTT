@@ -215,13 +215,13 @@ function PublicLayout() {
   const subscribeFilm = (film) => {
     console.log("Sono dentro Layout" + JSON.stringify(film));
     subscribeToFilmUpdates(JSON.stringify(film))
-      .then(() => { setDirty(true); })
+      .then(() => { setDirty(false); })
       .catch(e => handleErrors(e)); 
   }
 
   const unsubscribeFilm = (film) => {
-    unsubscribeFromFilmUpdates(film)
-      .then(() => { setDirty(true); })
+    unsubscribeFromFilmUpdates(JSON.stringify(film))
+      .then(() => { setDirty(false); })
       .catch(e => handleErrors(e)); 
   }
 
@@ -434,7 +434,6 @@ function ReviewLayout() {
     client.subscribe(`review/${filmId}`, { qos: 2 });
     client.on('message', (topic, message) => {
     if (topic === `review/${filmId}`) {
-    setFilm(filmId);
     setDirty(true);
     }
     });;}, []);

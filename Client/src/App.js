@@ -301,7 +301,7 @@ function Main() {
 
 export function subscribeToFilmUpdates(filmId) {
   return new Promise((resolve, reject) => {
-    client.subscribe(filmId, (error) => {
+    client.subscribe(`review/${filmId}`, (error) => {
       if(error) {
         console.error(error);
         reject(error);
@@ -320,16 +320,13 @@ export function subscribeToFilmUpdates(filmId) {
 
 export function unsubscribeFromFilmUpdates(filmId) {
   return new Promise((resolve, reject) => {
-    client.unsubscribe(filmId, (error) => {
+    client.unsubscribe(`review/${filmId}`, (error) => {
       if(error) {
         console.error(error);
         reject(error);
       } else {
         console.log("UnSubscribed to film updates for: " + filmId);
-        client.on('message', (topic, message) => {
-          console.log(`Received message: ${message.toString()} on topic: ${topic}`)
-        })
-        resolve();
+        resolve();        
       }
     });
   });

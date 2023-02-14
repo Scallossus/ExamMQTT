@@ -6,6 +6,12 @@ import { Review } from '../models/Review';
 
 
 
+
+
+
+
+
+
 const ReviewForm = (props) => {
 
   const [filmId, setFilmId] = useState(props.review ? props.review.filmId : '');
@@ -28,7 +34,9 @@ const ReviewForm = (props) => {
     // String.trim() method is used for removing leading and ending whitespaces from the title.
   //const owner = props.film ? props.film.owner : localStorage.getItem("userId");
     const newReview = new Review( {filmId, reviewerId, completed, reviewDate, rating, reviewDate, review } );
+    console.log("sono dentro il submit?");
     props.editReview(newReview);
+    navigate(nextpage);
 }
 
 
@@ -68,12 +76,11 @@ const ReviewForm = (props) => {
         <Form.Label>Review Text</Form.Label>
         <Form.Control as="textarea" rows={3} onChange={event => setReview(event.target.value)}/>
       </Form.Group>
-      <Link to={nextpage}> 
+     
       <Button className="mb-3" variant="primary" type="submit">Save</Button>
-      </Link>
-      &nbsp;
+
       <Link to={nextpage}> 
-        <Button className="mb-3" variant="danger" >Cancel</Button>
+      <Button className="mb-3" variant="danger" >Cancel</Button>
       </Link>
     </Form>
   )
