@@ -332,4 +332,27 @@ export function unsubscribeFromFilmUpdates(filmId) {
   });
 }
 
+export function subscribeToReview(filmId, reviewerId) {
+  let topic = `${filmId}/review`;
+  if (reviewId !== null) {
+    topic += `/${reviewerId}`;
+  }
+  
+  return new Promise((resolve, reject) => {
+    client.subscribe(topic, (error) => {
+      if(error) {
+        console.error(error);
+        reject(error);
+      } else {
+        console.log(`Subscribed to film updates for: ${filmId} (review: ${reviewId})`);
+        client.on('message', (topic, message) => {
+          console.log(`Received message: ${message.toString()} on topic: ${topic}`)
+        })
+        resolve();
+      }
+    });
+  });
+}
+
+
 export default App;

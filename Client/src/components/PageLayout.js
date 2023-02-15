@@ -383,6 +383,7 @@ function ReviewLayout() {
   const [reviews, setReviews] = useState([]);
   const [dirty, setDirty] = useState(true);
   const [film, setFilm] = useState();
+  const [isUser, setIsUser] = useState();
 
   const { filmId } = useParams();
   const { handleErrors } = useContext(MessageContext);
@@ -430,13 +431,32 @@ function ReviewLayout() {
     }
   }, [dirty]);
 
-  useEffect(() => {
+/*  useEffect(() => {
     client.subscribe(`review/${filmId}`, { qos: 2 });
     client.on('message', (topic, message) => {
     if (topic === `review/${filmId}`) {
     setDirty(true);
     }
-    });;}, []);
+    });;}, []); */
+
+    useEffect(() => {
+      const loggedInReviewerId = localStorage.getItem('userId');
+      client.subscribe(`review/${filmId}`, { qos: 2 });
+      client.on('message', (topic, message) => {
+        if (topic === `review/${filmId}`) {
+          API.getFilmReviews(filmId, loggedInReviewerId)
+            .then(review => {
+              if (review && review.reviewerId === loggedInReviewerId) {
+                    setDirty(true);
+              } else {
+                   setDirty(false);
+              }
+            })
+            .catch(e => { handleErrors(e); });
+        }
+      });
+    }, []);
+    
 
   const deleteReview = (review) => {
     API.deleteReview(review)
