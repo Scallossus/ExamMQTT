@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Row, Col, Button, Toast } from 'react-bootstrap';
 import { Link, useParams, useLocation, Outlet } from 'react-router-dom';
+import { batch } from 'react';
+
+
 
 import PrivateFilmForm from './PrivateFilmForm';
 import PublicFilmForm from './PublicFilmForm';
@@ -16,7 +19,7 @@ import { RouteFilters } from './Filters';
 import MessageContext from '../messageCtx';
 import API from '../API';
 
-import { subscribeToFilmUpdates, unsubscribeFromFilmUpdates } from '../App';
+import { subscribeToFilmUpdates, unsubscribeFromFilmUpdates, subscribeToReview, unsubscribeToReview } from '../App';
 
 import OnlineList from './OnlineList';
 import MiniOnlineList from './MiniOnlineList';
@@ -382,14 +385,15 @@ function ReviewLayout() {
 
   const [reviews, setReviews] = useState([]);
   const [dirty, setDirty] = useState(true);
-  const [firstRun, setFirstRun] = useState(false);
+  const [update, setUpdate] = useState(false);
   const [film, setFilm] = useState();
-
   const { filmId } = useParams();
   const { handleErrors } = useContext(MessageContext);
   const location = useLocation();
   const { filterLabel } = useParams();
   const filterId = filterLabel || (location.pathname === "/" && 'filter-all');
+  const [messageReceived, setMessageReceived] = useState(false);
+
 
   var mqtt = require('mqtt')
   var clientId = 'mqttjs_' + Math.random().toString(16).substr(2, 8)
@@ -410,147 +414,80 @@ function ReviewLayout() {
   var host = 'ws://127.0.0.1:8080'
   var client = mqtt.connect(host, options);
 
-  // Without this we do not pass the if(dirty) test in the [filterId, dirty] useEffect
   useEffect(() => {
     setDirty(true);
-  }, [filterId])
+  }, [filterId])   
 
+  const reviewsRef = useRef([]);
+  const needUpdateRef = useRef(false);
 
   useEffect(() => {
-    if (dirty && !firstRun) {
-      client.subscribe(`topic/${filmId}`, { qos: 2 });
-      API.getFilm(filmId).then(filmObj => {
-        setFilm(filmObj)
-        API.getFilmReviews(filmId)
-        .then(reviews => {
-          setReviews(reviews);
-          setDirty(false);
-          console.log("test" + reviews);
-          })
-
-      })
-      .catch(e => { handleErrors(e);  } ); 
+    if (dirty) {
+      API.getFilm(filmId)
+        .then((filmObj) => {
+          setFilm(filmObj);
+          API.getFilmReviews(filmId).then((reviews) => {
+            reviewsRef.current = reviews;
+            setReviews(reviews);
+            setDirty(false);
+            console.log("prima mount")
+            client.subscribe(`topic/${filmId}`, { qos: 2 });
+            setupClientOn(client); // call setupClientOn when client is ready
+          });
+        })
+        .catch((e) => {
+          handleErrors(e);
+        });
+    } else {
+      setDirty(false);
     }
-    else {
-      setFirstRun(false);
-    }
-  },[dirty, firstRun]);
+  }, [dirty]);
 
-/*  useEffect(() => {
-    client.subscribe(`review/${filmId}`, { qos: 2 });
-    client.on('message', (topic, message) => {
-    if (topic === `review/${filmId}`) {
-    setDirty(true);
+  const setupClientOn = (client) => {
+    client.on('message', handleReceiveMessage);
+  };
+  
+  const handleReceiveMessage = (topic, message) => {
+    if (topic === `topic/${filmId}`) {
+      const updatedReviewString = message.toString();
+      const updatedReviewObject = JSON.parse(updatedReviewString);
+      const updatedReview = updatedReviewObject.reviewDetails;
+      setMessageReceived(updatedReview);
+      updateReviews(reviewsRef.current, updatedReview);
     }
-    });;}, []); */
+  };
+  
+  const updateReviews = (reviews, updatedReview) => {
+    console.log("Sono dentro UpdateReviews");
+    console.log(reviews);
+    const loggedInReviewerId = localStorage.getItem('userId');
+    const newReviews = reviews.map((review) => {
+      return JSON.parse(JSON.stringify(review));
+    });
+    const updatedReviewIndex = newReviews.findIndex((review) => {
+      return review.filmId === updatedReview.filmId && review.reviewerId === updatedReview.reviewerId;
+    });
+    console.log(updatedReviewIndex);
+    if (updatedReviewIndex !== -1) {
+      newReviews[updatedReviewIndex] = updatedReview;
+    }
+    reviewsRef.current = newReviews;
+    needUpdateRef.current = true;
+    console.log(reviewsRef.current);
+  };
 
-/*    useEffect(() => {
-      const loggedInReviewerId = localStorage.getItem('userId');
+  useEffect(() => {
+    if (needUpdateRef.current) {
+      console.log('updating reviews...');
+      setReviews(reviewsRef.current);
+      console.log("New reviews:", reviewsRef.current);
       
-      client.on('message', (topic, message) => {
-        if (topic === `topic/${filmId}`) {
-          API.getFilmReviews(filmId)
-            .then(reviews => {
-              if (reviews.some(review => review.reviewerId === loggedInReviewerId)) {
-                console.log("sono dentro il FOUND");
-                setDirty(true);
-              }
-            })
-            .catch(e => {
-              handleErrors(e);
-            });
-        }
-      });
-    }, []); */
-
-    useEffect(() => {
-      const loggedInReviewerId = localStorage.getItem('userId'); 
-      const prevReviews = [...reviews]; 
-      console.log(reviews);  
-      client.on('message', (topic, message) => {
-        if (topic === `topic/${filmId}`) {
-          const updatedReviewString = message.toString();
-          const updatedReviewObject = JSON.parse(updatedReviewString);
-          const updatedReview = updatedReviewObject.reviewDetails;
-
-          
-          
-          console.log("updatedReview:" + updatedReview.reviewerId);
-          console.log("reviews:" + prevReviews);
-          const updatedReviewIndex = prevReviews.findIndex((review) => {
-            return (
-              review.filmId === updatedReview.filmId &&
-              review.reviewerId === updatedReview.reviewerId
-            );
-          });
-
-          console.log("Ok:" + updatedReviewIndex);
-    
-          if (updatedReviewIndex !== -1) {
-            const updatedReviews = [...reviews];
-            updatedReviews[updatedReviewIndex] = updatedReview;
-    
-            if (updatedReview.reviewerId !== loggedInReviewerId) {
-              return;
-            }
-    
-            setReviews(updatedReviews);
-          }
-        };
-      });
-
-    }, [reviews]);
-    
-
-   /* useEffect(() => {
-      const loggedInReviewerId = localStorage.getItem('userId');
-      client.subscribe(`topic/${filmId}`, { qos: 2 });
-      client.on('message', (topic, message) => {
-        if (topic === `topic/${filmId}`) {
-          console.log("Ricevuto messaggio su " + topic);
-
-          const updatedReviewString = message.toString();
-          const updatedReviewObject = JSON.parse(updatedReviewString);
-          const updatedReview = updatedReviewObject.reviewDetails; 
-          
-          API.getFilmReviews(filmId)
-          .then(reviews => {
-            const updatedReviews = [...reviews];
-            console.log(updatedReviews);
-            const reviewIndex = updatedReviews.map((review, index) => {
-              if (
-                review.filmId === updatedReview.filmId &&
-                review.reviewerId === updatedReview.reviewerId
-              ) {
-                return index;
-              } else {
-                return null;
-              }
-            }).filter(index => index !== null)[0];  
-        
-            if (reviewIndex !== undefined) {
-              console.log("sono dentro" + reviewIndex);
-              updatedReviews[reviewIndex] = updatedReview;
-              if (updatedReview.reviewerId === loggedInReviewerId) {
-                console.log("ancora più dentro");
-                setReviews(updatedReviews);
-              }
-            } else {
-              console.log("No matching review found.");
-            }
-          })
-          .catch(e => {
-            handleErrors(e);
-          });
-
-        }
-      });
-      client.unsubscribe(`topic/${filmId}`);
-    }, []); */
-    
-    
-    
-    
+      needUpdateRef.current = false;
+    }
+  }, [needUpdateRef.current]);
+  
+  
+  
 
   const deleteReview = (review) => {
     API.deleteReview(review)
@@ -573,16 +510,31 @@ function ReviewLayout() {
     .catch(e => handleErrors(e));
   }
 
-    return (
-      <>
-        <h1 className="pb-3">Review for Film with ID {filmId}</h1>
-        {film && 
-          <h2>Title: {film.title}</h2>
-        }
+  const subscribeReview = (filmId, reviewerId) => {
+    console.log("Sono dentro Layout" + JSON.stringify(film));
+    subscribeToReview(JSON.stringify(filmId), JSON.stringify(reviewerId))
+      .then(() => { setDirty(false); })
+      .catch(e => handleErrors(e)); 
+  }
+
+  const unsubscribeReview = (filmId, reviewerId) => {
+    unsubscribeToReview(JSON.stringify(filmId), JSON.stringify(reviewerId))
+      .then(() => { setDirty(false); })
+      .catch(e => handleErrors(e)); 
+  }
+
+  return (
+    <>
+      <h1 className="pb-3">Review for Film with ID {filmId}</h1>
+      {film && 
+        <h2>Title: {film.title}</h2>
+      }
+      {reviews !== null && 
         <FilmReviewTable reviews={reviews} film={film}
-          deleteReview={deleteReview} updateReview={updateReview} refreshReviews={refreshReviews} />
-      </>
-    );
+          deleteReview={deleteReview} updateReview={updateReview} refreshReviews={refreshReviews} subscribed={subscribeReview} unsubscribed={unsubscribeReview} />
+      }
+    </>
+  );
 }
 
 function EditReviewLayout() {

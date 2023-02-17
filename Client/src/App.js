@@ -354,5 +354,25 @@ export function subscribeToReview(filmId, reviewerId) {
   });
 }
 
+export function unsubscribeToReview(filmId, reviewerId) {
+  let topic = `${filmId}/review`;
+  if (reviewerId !== null) {
+    topic += `/${reviewerId}`;
+  }
+  return new Promise((resolve, reject) => {
+    client.unsubscribe(topic, (error) => {
+      if(error) {
+        console.error(error);
+        reject(error);
+      } else {
+        console.log("UnSubscribed to film updates for: " + filmId);
+        resolve();        
+      }
+    });
+  });
+}
+
+
+
 
 export default App;

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, Button, OverlayTrigger, Popover } from 'react-bootstrap/'
 import { Link, useLocation } from 'react-router-dom';
 import Pagination from "react-js-pagination";
+import dayjs from 'dayjs';
+
 
 function FilmReviewTable(props) {
 
@@ -16,7 +18,7 @@ function FilmReviewTable(props) {
         {
           props.reviews.map((review) =>
             <FilmReviewRow reviewData={review} filmData={props.film} key={review.reviewerId} id={review.reviewerId}
-              deleteReview={props.deleteReview} updateReview={props.updateReview} />
+              deleteReview={props.deleteReview} updateReview={props.updateReview} subscribed={props.subscribed} unsubscribed={props.unsubscribed} />
           )
         }
         
@@ -48,6 +50,19 @@ function FilmReviewRow(props) {
    * So, we may be able to come back to the last selected filter view if cancel is pressed.
    */
   const location = useLocation();
+
+  
+  const [subscribed, setSubscribed] = useState(false);
+  
+  const handleClick = () => {
+    if (subscribed) {
+      props.unsubscribed(props.reviewData.filmId, props.reviewData.reviewerId);
+      setSubscribed(false);
+    } else {
+      props.subscribed(props.reviewData.filmId, props.reviewData.reviewerId);
+      setSubscribed(true);
+    }
+  } 
 
   
   return (
@@ -103,6 +118,9 @@ function FilmReviewRow(props) {
       </OverlayTrigger>
         : ''}
       </td>
+      <td>  <Button variant={subscribed ? 'danger' : 'primary'} onClick={handleClick}>
+        {subscribed ? 'Unsubscribe' : 'Subscribe'}
+      </Button></td>
     </tr>
   );
 }
