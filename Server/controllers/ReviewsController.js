@@ -136,7 +136,7 @@ module.exports.updateSingleReview = function updateSingleReview (req, res, next)
   else {
     Reviews.updateSingleReview(req.body, req.params.filmId, req.params.reviewerId)
     .then(function(response) {
-        mqttBroker.publishReviewUpdate(`review/${req.params.filmId}`, {reviewModified: true, reviewDetails: req.body});
+       mqttBroker.publishReviewUpdate(`topic/${req.params.filmId}`, {reviewModified: true, reviewDetails: req.body});
         mqttBroker.publishReviewUpdate(`${req.params.filmId}/review/${req.params.reviewerId}`, {reviewModified: true, reviewDetails: req.body});
         utils.writeJson(res, response, 204);
     })

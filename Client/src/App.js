@@ -334,7 +334,7 @@ export function unsubscribeFromFilmUpdates(filmId) {
 
 export function subscribeToReview(filmId, reviewerId) {
   let topic = `${filmId}/review`;
-  if (reviewId !== null) {
+  if (reviewerId !== null) {
     topic += `/${reviewerId}`;
   }
   
@@ -344,7 +344,7 @@ export function subscribeToReview(filmId, reviewerId) {
         console.error(error);
         reject(error);
       } else {
-        console.log(`Subscribed to film updates for: ${filmId} (review: ${reviewId})`);
+        console.log(`Subscribed to film updates for: ${filmId} (review: ${reviewerId})`);
         client.on('message', (topic, message) => {
           console.log(`Received message: ${message.toString()} on topic: ${topic}`)
         })

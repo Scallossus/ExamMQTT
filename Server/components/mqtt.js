@@ -66,6 +66,7 @@ module.exports.deleteMessage = function deleteMessage(filmId) {
 };
 
 module.exports.publishReviewUpdate = function publishReviewUpdate(topic, message) {
-  mqtt_connection.publish(String(topic), JSON.stringify(message), { qos: 1, retain: true })
+  mqtt_connection.publish(String(topic), JSON.stringify(message), { qos: 2, retain: true })
+  console.log("ho inviato messaggio su topic" + topic);
 };
 
