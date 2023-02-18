@@ -5,13 +5,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Review } from '../models/Review';
 
 
-
-
-
-
-
-
-
 const ReviewForm = (props) => {
 
   const [filmId, setFilmId] = useState(props.review ? props.review.filmId : '');

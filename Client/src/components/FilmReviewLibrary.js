@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Button, OverlayTrigger, Popover } from 'react-bootstrap/'
 import { Link, useLocation } from 'react-router-dom';
 import Pagination from "react-js-pagination";
@@ -6,6 +6,11 @@ import dayjs from 'dayjs';
 
 
 function FilmReviewTable(props) {
+  
+  useEffect(() => {
+    console.log("dentroReviewTable");
+    console.log(props.newReview);
+  }, [props.newReview]) 
 
   const handlePageChange = pageNumber => {
     props.refreshReviews(parseInt(props.film.id), pageNumber);
@@ -13,17 +18,25 @@ function FilmReviewTable(props) {
 
   return (
     <>
-    <Table>
-      <tbody>
-        {
-          props.reviews.map((review) =>
-            <FilmReviewRow reviewData={review} filmData={props.film} key={review.reviewerId} id={review.reviewerId}
-              deleteReview={props.deleteReview} updateReview={props.updateReview} subscribed={props.subscribed} unsubscribed={props.unsubscribed} />
-          )
-        }
-        
-      </tbody>
-    </Table>
+   <Table>
+  <tbody>
+    {props.reviews.map((review) => {
+      if (props.newReview && review.filmId === props.newReview.filmId && review.reviewerId === props.newReview.reviewerId) {
+        return (
+          <FilmReviewRow reviewData={review} filmData={props.film} key={review.reviewerId} id={review.reviewerId}
+            deleteReview={props.deleteReview} subscribed={props.subscribed} unsubscribed={props.unsubscribed}
+            newReview={props.newReview} />
+        );
+      } else {
+        return (
+          <FilmReviewRow reviewData={review} filmData={props.film} key={review.reviewerId} id={review.reviewerId}
+            deleteReview={props.deleteReview} subscribed={props.subscribed} unsubscribed={props.unsubscribed} />
+        );
+      }
+    })}
+  </tbody>
+</Table>
+
 
        <Pagination 
           itemClass="page-item" // add it for bootstrap 4
@@ -64,13 +77,54 @@ function FilmReviewRow(props) {
     }
   } 
 
+  const [ReviewData, setReviewData] = useState(props.reviewData);
+
+/*  useEffect(() => {
+    if (props.newReview) {
+      //console.log("Dentro Row");
+      //console.log(props.newReview);
+      if (props.newReview.filmId === ReviewData.filmId && props.newReview.reviewerId === ReviewData.reviewerId) {
+        setReviewData(prevReviewData => ({
+          ...prevReviewData,
+          // Update the relevant fields here, e.g.:
+          rating: props.newReview.rating,
+          review: props.newReview.review
+        }));
+      }
+    }
+  }, [props.newReview, ReviewData]);*/
+
+  useEffect(() => {
+    if (props.newReview) {
+      console.log("Dentro Row");
+      console.log(props.newReview);
+      if (props.newReview.filmId === ReviewData.filmId && props.newReview.reviewerId === ReviewData.reviewerId) {
+        // Check if the new review is different from the current review data
+        if (props.newReview.rating !== ReviewData.rating || props.newReview.review !== ReviewData.review) {
+          setReviewData(prevReviewData => ({
+            ...prevReviewData,
+            // Update the relevant fields here, e.g.:
+            completed: props.newReview.completed,
+            rating: props.newReview.rating,
+            review: props.newReview.review
+          }));
+        }
+      }
+    }
+  }, [props.newReview, ReviewData]);
+  
+
+
+
+
+
   
   return (
     <tr>
       <td>
        {
-        props.reviewData.reviewerId == localStorage.getItem("userId") &&
-        <Link to={"/public/" + props.reviewData.filmId + "/reviews/complete"} state={{nextpage: location.pathname}}>
+        ReviewData.reviewerId == localStorage.getItem("userId") &&
+        <Link to={"/public/" + ReviewData.filmId + "/reviews/complete"} state={{nextpage: location.pathname}}>
           <i className="bi bi-pencil-square" />
         </Link>
       }
@@ -78,38 +132,38 @@ function FilmReviewRow(props) {
       {
         props.filmData.owner == localStorage.getItem("userId") &&
         <Link to={{}}> 
-          <i className="bi bi-trash" onClick={() => { props.deleteReview(props.reviewData) }} />
+          <i className="bi bi-trash" onClick={() => { props.deleteReview(ReviewData) }} />
         </Link>
       }
       </td>
       <td>
-        <p>Reviewer ID: {props.reviewData.reviewerId}</p>
+        <p>Reviewer ID: {ReviewData.reviewerId}</p>
       </td>
       <td>
       {
-        !props.reviewData.completed &&
+        !ReviewData.completed &&
         <p>Not Completed</p>
       }
       {
-        props.reviewData.completed &&
+        ReviewData.completed &&
         <p>Completed</p>
       }
       </td>
       <td>
-        {props.reviewData.reviewDate ? <small>{formatWatchDate(props.reviewData.reviewDate, 'MMMM D, YYYY')}</small> : ''}
+        {ReviewData.reviewDate ? <small>{formatWatchDate(ReviewData.reviewDate, 'MMMM D, YYYY')}</small> : ''}
       </td>
       <td>
-        {props.reviewData.rating ? <Rating rating={props.reviewData.rating} maxStars={10} /> : ''}   
+        {ReviewData.rating ? <Rating rating={ReviewData.rating} maxStars={10} /> : ''}   
       </td>
       <td>
-        {props.reviewData.review ? 
+        {ReviewData.review ? 
         <OverlayTrigger
         trigger="click" placement="left"
         overlay={
           <Popover>
             <Popover.Header as="h3">Review</Popover.Header>
             <Popover.Body>
-              {props.reviewData.review}
+              {ReviewData.review}
             </Popover.Body>
           </Popover>
         }

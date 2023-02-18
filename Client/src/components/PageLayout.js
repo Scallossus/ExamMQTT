@@ -385,7 +385,7 @@ function ReviewLayout() {
 
   const [reviews, setReviews] = useState([]);
   const [dirty, setDirty] = useState(true);
-  const [update, setUpdate] = useState(false);
+  const [newReview, setNewReview] = useState();
   const [film, setFilm] = useState();
   const { filmId } = useParams();
   const { handleErrors } = useContext(MessageContext);
@@ -448,16 +448,16 @@ function ReviewLayout() {
   };
   
   const handleReceiveMessage = (topic, message) => {
+    const loggedInReviewerId = localStorage.getItem('userId');
     if (topic === `topic/${filmId}`) {
       const updatedReviewString = message.toString();
       const updatedReviewObject = JSON.parse(updatedReviewString);
       const updatedReview = updatedReviewObject.reviewDetails;
-      setMessageReceived(updatedReview);
-      updateReviews(reviewsRef.current, updatedReview);
-    }
+      setNewReview(updatedReview);
+     }
   };
   
-  const updateReviews = (reviews, updatedReview) => {
+ /* const updateReviews = (reviews, updatedReview) => {
     console.log("Sono dentro UpdateReviews");
     console.log(reviews);
     const loggedInReviewerId = localStorage.getItem('userId');
@@ -471,25 +471,10 @@ function ReviewLayout() {
     if (updatedReviewIndex !== -1) {
       newReviews[updatedReviewIndex] = updatedReview;
     }
-    reviewsRef.current = newReviews;
-    needUpdateRef.current = true;
-    console.log(reviewsRef.current);
-  };
+    setUpdatedReviews(newReviews);
+  }; */
 
-  useEffect(() => {
-    if (needUpdateRef.current) {
-      console.log('updating reviews...');
-      setReviews(reviewsRef.current);
-      console.log("New reviews:", reviewsRef.current);
-      
-      needUpdateRef.current = false;
-    }
-  }, [needUpdateRef.current]);
-  
-  
-  
-
-  const deleteReview = (review) => {
+ const deleteReview = (review) => {
     API.deleteReview(review)
       .then(() => { setDirty(true);})
       .catch(e => handleErrors(e)); 
@@ -530,8 +515,8 @@ function ReviewLayout() {
         <h2>Title: {film.title}</h2>
       }
       {reviews !== null && 
-        <FilmReviewTable reviews={reviews} film={film}
-          deleteReview={deleteReview} updateReview={updateReview} refreshReviews={refreshReviews} subscribed={subscribeReview} unsubscribed={unsubscribeReview} />
+        <FilmReviewTable reviews={reviews} film={film} newReview={newReview}
+          deleteReview={deleteReview} refreshReviews={refreshReviews} subscribed={subscribeReview} unsubscribed={unsubscribeReview}  />
       }
     </>
   );

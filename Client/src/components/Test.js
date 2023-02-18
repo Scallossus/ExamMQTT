@@ -372,3 +372,26 @@ When you call setReviews, React will re-render the component, and any child comp
 By commenting out setReviews, you're preventing the FilmReviewTable component from re-rendering, which may be why everything is working fine. However, this is likely just masking the underlying problem.
 
 To debug the issue, you may want to use the React Profiler to see if there are any performance issues with the FilmReviewTable component. You could also try optimizing the rendering of the FilmReviewTable component, for example by using React.memo to prevent unnecessary re-renders or by using useCallback to memoize function props.
+
+
+
+  useEffect(() => {
+    const loggedInReviewerId = localStorage.getItem('userId');
+    console.log(props.newReview);
+
+    const updatedReviews = props.reviews.map((review) => {
+      return JSON.parse(JSON.stringify(review));
+    });
+
+    const updatedReviewIndex = updatedReviews.findIndex((review) => {
+      return review.filmId === props.newReview.filmId && review.reviewerId === props.newReview.reviewerId;
+    });
+
+    if (updatedReviewIndex !== -1) {
+      updatedReviews[updatedReviewIndex] = props.newReview;
+    }
+
+    setNewReviews(updatedReviews);
+  }, [props.newReview]) 
+
+  const reviews = newReviews ? newReviews : props.reviews;
