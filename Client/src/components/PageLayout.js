@@ -392,7 +392,7 @@ function ReviewLayout() {
   const location = useLocation();
   const { filterLabel } = useParams();
   const filterId = filterLabel || (location.pathname === "/" && 'filter-all');
-  const [messageReceived, setMessageReceived] = useState(false);
+  const [isReviewer, setIsReviewer] = useState(false);
 
 
   var mqtt = require('mqtt')
@@ -419,9 +419,9 @@ function ReviewLayout() {
   }, [filterId])   
 
   const reviewsRef = useRef([]);
-  const needUpdateRef = useRef(false);
 
   useEffect(() => {
+    const loggedInReviewerId = localStorage.getItem('userId');
     if (dirty) {
       API.getFilm(filmId)
         .then((filmObj) => {
@@ -432,7 +432,9 @@ function ReviewLayout() {
             setDirty(false);
             console.log("prima mount")
             client.subscribe(`topic/${filmId}`, { qos: 2 });
-            setupClientOn(client); // call setupClientOn when client is ready
+            setupClientOn(client); 
+            const userReviews = reviews.filter(review => review.reviewerId === loggedInReviewerId);
+            setIsReviewer(userReviews.length > 0);
           });
         })
         .catch((e) => {
@@ -448,7 +450,7 @@ function ReviewLayout() {
   };
   
   const handleReceiveMessage = (topic, message) => {
-    const loggedInReviewerId = localStorage.getItem('userId');
+    
     if (topic === `topic/${filmId}`) {
       const updatedReviewString = message.toString();
       const updatedReviewObject = JSON.parse(updatedReviewString);
@@ -515,7 +517,7 @@ function ReviewLayout() {
         <h2>Title: {film.title}</h2>
       }
       {reviews !== null && 
-        <FilmReviewTable reviews={reviews} film={film} newReview={newReview}
+        <FilmReviewTable reviews={reviews} film={film} newReview={newReview} isReviewer={isReviewer}
           deleteReview={deleteReview} refreshReviews={refreshReviews} subscribed={subscribeReview} unsubscribed={unsubscribeReview}  />
       }
     </>

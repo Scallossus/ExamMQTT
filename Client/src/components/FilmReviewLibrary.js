@@ -25,7 +25,7 @@ function FilmReviewTable(props) {
         return (
           <FilmReviewRow reviewData={review} filmData={props.film} key={review.reviewerId} id={review.reviewerId}
             deleteReview={props.deleteReview} subscribed={props.subscribed} unsubscribed={props.unsubscribed}
-            newReview={props.newReview} />
+            newReview={props.newReview} isReviewer={props.isReviewer} />
         );
       } else {
         return (
@@ -101,6 +101,7 @@ function FilmReviewRow(props) {
       if (props.newReview.filmId === ReviewData.filmId && props.newReview.reviewerId === ReviewData.reviewerId) {
         // Check if the new review is different from the current review data
         if (props.newReview.rating !== ReviewData.rating || props.newReview.review !== ReviewData.review) {
+          if(props.isReviewer){
           setReviewData(prevReviewData => ({
             ...prevReviewData,
             // Update the relevant fields here, e.g.:
@@ -108,7 +109,7 @@ function FilmReviewRow(props) {
             rating: props.newReview.rating,
             review: props.newReview.review
           }));
-        }
+        }}
       }
     }
   }, [props.newReview, ReviewData]);
