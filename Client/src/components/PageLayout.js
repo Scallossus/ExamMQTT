@@ -393,6 +393,8 @@ function ReviewLayout() {
   const { filterLabel } = useParams();
   const filterId = filterLabel || (location.pathname === "/" && 'filter-all');
   const [isReviewer, setIsReviewer] = useState(false);
+  const [reviewsCopy, setReviewsCopy] = useState([]);
+   
 
 
   var mqtt = require('mqtt')
@@ -421,7 +423,7 @@ function ReviewLayout() {
   const reviewsRef = useRef([]);
 
   useEffect(() => {
-    const loggedInReviewerId = localStorage.getItem('userId');
+
     if (dirty) {
       API.getFilm(filmId)
         .then((filmObj) => {
@@ -431,10 +433,9 @@ function ReviewLayout() {
             setReviews(reviews);
             setDirty(false);
             console.log("prima mount")
-            client.subscribe(`topic/${filmId}`, { qos: 2 });
+            client.subscribe(`topic/${filmId}`, { qos: 1 });
             setupClientOn(client); 
-            const userReviews = reviews.filter(review => review.reviewerId === loggedInReviewerId);
-            setIsReviewer(userReviews.length > 0);
+            setReviewsCopy(reviews);
           });
         })
         .catch((e) => {
@@ -444,6 +445,16 @@ function ReviewLayout() {
       setDirty(false);
     }
   }, [dirty]);
+  
+  useEffect(() => {
+    const loggedInReviewerId = localStorage.getItem('userId');
+    console.log("Qui");
+    console.log(loggedInReviewerId);
+    console.log(reviewsCopy);
+    const count = reviewsCopy.filter((review) => review.reviewerId === parseInt(loggedInReviewerId)).length;
+    console.log(count);
+    setIsReviewer(count > 0);
+  }, [reviewsCopy])  
 
   const setupClientOn = (client) => {
     client.on('message', handleReceiveMessage);
@@ -459,22 +470,6 @@ function ReviewLayout() {
      }
   };
   
- /* const updateReviews = (reviews, updatedReview) => {
-    console.log("Sono dentro UpdateReviews");
-    console.log(reviews);
-    const loggedInReviewerId = localStorage.getItem('userId');
-    const newReviews = reviews.map((review) => {
-      return JSON.parse(JSON.stringify(review));
-    });
-    const updatedReviewIndex = newReviews.findIndex((review) => {
-      return review.filmId === updatedReview.filmId && review.reviewerId === updatedReview.reviewerId;
-    });
-    console.log(updatedReviewIndex);
-    if (updatedReviewIndex !== -1) {
-      newReviews[updatedReviewIndex] = updatedReview;
-    }
-    setUpdatedReviews(newReviews);
-  }; */
 
  const deleteReview = (review) => {
     API.deleteReview(review)

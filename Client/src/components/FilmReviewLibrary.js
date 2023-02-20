@@ -79,37 +79,22 @@ function FilmReviewRow(props) {
 
   const [ReviewData, setReviewData] = useState(props.reviewData);
 
-/*  useEffect(() => {
-    if (props.newReview) {
-      //console.log("Dentro Row");
-      //console.log(props.newReview);
-      if (props.newReview.filmId === ReviewData.filmId && props.newReview.reviewerId === ReviewData.reviewerId) {
-        setReviewData(prevReviewData => ({
-          ...prevReviewData,
-          // Update the relevant fields here, e.g.:
-          rating: props.newReview.rating,
-          review: props.newReview.review
-        }));
-      }
-    }
-  }, [props.newReview, ReviewData]);*/
-
   useEffect(() => {
     if (props.newReview) {
       console.log("Dentro Row");
       console.log(props.newReview);
       if (props.newReview.filmId === ReviewData.filmId && props.newReview.reviewerId === ReviewData.reviewerId) {
-        // Check if the new review is different from the current review data
         if (props.newReview.rating !== ReviewData.rating || props.newReview.review !== ReviewData.review) {
+          console.log(props.isReviewer);
           if(props.isReviewer){
           setReviewData(prevReviewData => ({
             ...prevReviewData,
-            // Update the relevant fields here, e.g.:
             completed: props.newReview.completed,
             rating: props.newReview.rating,
             review: props.newReview.review
           }));
-        }}
+       }
+      }
       }
     }
   }, [props.newReview, ReviewData]);
