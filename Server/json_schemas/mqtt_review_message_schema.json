@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://www.my-schema.com/mqtt_review_update_schema.json",
+  "title": "MQTT Review Update Message",
+  "description": "JSON Schema for MQTT Review Update Message",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "reviewModified": {
+      "type": "boolean",
+      "description": "whether the review was modified or not"
+    },
+    "reviewDetails": {
+      "type": "object",
+      "description": "details of the modified review",
+      "properties": {
+        "filmId": {
+          "type": "integer",
+          "description": "unique identifier of the film for which a review invitation has been issued"
+        },
+        "reviewerId": {
+          "type": "integer",
+          "description": "unique identifier of the the user who has received the review invitation"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "this property is set to true if the review has been completed, false otherwise",
+          "default": "false"
+        },
+        "reviewDate": {
+          "type": "string",
+          "format": "date",
+          "description": "the date when the review has been completed by the invited user"
+        },
+        "rating": {
+          "type": "integer",
+          "description": "the rating the reviewer has given to the film",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "review": {
+          "type": "string",
+          "description": "a textual description of the review",
+          "maxLength": 1000
+        }
+      },
+      "required": ["filmId", "reviewerId", "completed"]
+    }
+  },
+  "required": ["reviewModified", "reviewDetails"]
+}

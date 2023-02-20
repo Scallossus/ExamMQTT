@@ -11,8 +11,7 @@ externalDocs:
   description: Find out more about Swagger
   url: 'http://swagger.io'
 servers:
-  - url: 'https://todo.swagger.io/v2'
-  - url: 'http://todo.swagger.io/v2'
+  - url: 'http://localhost:3001'
 tags:
   - name: films
     description: the set of all the films
@@ -564,8 +563,8 @@ paths:
         - 'films/public/{filmId}/reviews/{reviewerId}'
       security:
         - cookieAuth: []
-      summary: Complete a review
-      description: The review of the film with ID filmId and issued to the user with ID reviewerId is completed. This operation only allows setting the "completed" property to the "true" value, and changing the values of the "reviewDate", "rating", and "review" properties. This operation can be performed only by the invited reviewer.
+      summary: Update a Review
+      description: The review of the film with ID filmId and issued to the user with ID reviewerId is updated. This operation only allows changing the "completed" property and changing the values of the "reviewDate", "rating", and "review" properties. This operation can be performed only by the invited reviewer.
       operationId: updateSingleReview
       parameters:
         - name: filmId
@@ -592,7 +591,6 @@ paths:
               properties:
                 completed:
                   type: boolean
-                  default: 'true'
                 reviewDate:
                   type: string
                   format: date
